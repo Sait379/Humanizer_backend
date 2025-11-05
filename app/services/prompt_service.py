@@ -4,4 +4,4 @@ class PromptService:
         self.tone = tone
 
     def build_prompt(self, text: str) -> str:
-        return f"Rewrite the following text in a {self.tone} tone:\n\n{text}"
+        return f"Rewrite the following text in a {self.tone} tone:\n\n{text}. DOnt give any options or uncecessary data. Just do as asked"
