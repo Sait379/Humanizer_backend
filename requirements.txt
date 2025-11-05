@@ -1,0 +1,10 @@
+fastapi
+httpx[http2]
+uvicorn
+python-dotenv
+langchain
+langchain-google-genai
+google-genai
+pydantic
+langchain-core 
+langchain-community
