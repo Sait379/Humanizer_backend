@@ -11,14 +11,15 @@ class PromptService:
 
     PROMPTS = {
         "neutral": (
-            "[INSTRUCTION] Act as an Expert Language Stylist. Your sole objective is to transform the provided text into highly fluent, native-sounding human prose. "
-            "Preserve all factual data and the core message STRICTLY. "
-            "Constraint: Eliminate all signs of automated or overly passive phrasing, improving rhythm and natural flow.\n\n"
+            "[INSTRUCTION] You are an expert human editor. The following text has already been cleaned and normalized. "
+            "Your task is to humanize it — make it sound natural, fluid, and genuinely human-written — while keeping the tone neutral "
+            "and the meaning fully intact. Do NOT remove punctuation or fix grammar unless absolutely needed. "
+            "Focus on improving flow, phrasing, and rhythm so it reads as if written by a real person, not an AI.\n\n"
             "--- DEMONSTRATION ---\n"
-            f"Input: {DEMO_INPUT}\n"
-            "Output: The company told its staff that a new guideline for improving work processes will start on Monday.\n"
+            "Input: The utilization of advanced computational methodologies improves operational efficiency.\n"
+            "Output: Using advanced computing methods makes work more efficient.\n"
             "--- END DEMONSTRATION ---\n\n"
-            "Input Text:\n{text}"
+            "Text to humanize:\n{text}"
         ),
         "friendly": (
             "[INSTRUCTION] Assume the persona of a Warm and Approachable Colleague. Rephrase the input text to adopt a naturally conversational, optimistic, and welcoming tone. "
@@ -66,6 +67,7 @@ class PromptService:
             "Input Text:\n{text}"
         ),
     }
+
 
     ALLOWED_TONES = set(PROMPTS.keys())
 

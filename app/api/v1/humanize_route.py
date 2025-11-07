@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, HTTPException
 from app.schemas.humanize_schema import HumanizeRequest, HumanizeResponse
-from app.services.common.humanize_services import HumanizeService
+from app.services.humanize_service import HumanizeService
 
 router = APIRouter()
 

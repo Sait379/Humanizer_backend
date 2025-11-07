@@ -9,7 +9,7 @@ class HumanizeRequest(BaseModel):
 
 class HumanizeResponse(BaseModel):
     input_length: Optional[int] = None
-    humanized_text: list[str] = None
+    humanized_text: str = None
     score: Optional[str] = None
     model: Optional[str] = None
     tone: Optional[str] = None
