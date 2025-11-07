@@ -84,19 +84,19 @@ class NormalizeService:
         }
 
 
-if __name__ == "__main__":
-    service = NormalizeService()
-    sample_text = """Hey there!! 😄 I dont recently came across this super cant cool article on https://openai.com about AI writing — it’s honestly mind-blowing 🤯!! The way these tools can mimic human creativity is just awesome, though sometimes the tone feels a bit robotic 😅. 
-BTW, if you wanna check some examples, visit www.medium.com or follow my updates on Twitter @ayushi_ai 🤗. 
-Also, I think AI shouldn’t replace writers but empower them to write faster & better 💪!! What do you think??"""
+# if __name__ == "__main__":
+#     service = NormalizeService()
+#     sample_text = """Hey there!! 😄 I dont recently came across this super cant cool article on https://openai.com about AI writing — it’s honestly mind-blowing 🤯!! The way these tools can mimic human creativity is just awesome, though sometimes the tone feels a bit robotic 😅. 
+# BTW, if you wanna check some examples, visit www.medium.com or follow my updates on Twitter @ayushi_ai 🤗. 
+# Also, I think AI shouldn’t replace writers but empower them to write faster & better 💪!! What do you think??"""
 
 
-    result = service.clean_and_normalize(sample_text)
+#     result = service.clean_and_normalize(sample_text)
 
-    print("\n🔹 Original Text:")
-    print(sample_text)
-    print("\n🔹 After Preclean + Mask + Normalize:")
-    print(result["cleaned_text"])
-    print("\n🔹 Mask Mapping:")
-    print(result["mask_map"])
+#     print("\n🔹 Original Text:")
+#     print(sample_text)
+#     print("\n🔹 After Preclean + Mask + Normalize:")
+#     print(result["cleaned_text"])
+#     print("\n🔹 Mask Mapping:")
+#     print(result["mask_map"])
   
