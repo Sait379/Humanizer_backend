@@ -8,3 +8,9 @@ google-genai
 pydantic
 langchain-core 
 langchain-community
+emoji
+textblob
+language_tool_python
+cleantext
+contractions
+textstat
