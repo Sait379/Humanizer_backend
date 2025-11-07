@@ -29,15 +29,15 @@ class HumanizeService:
         """
         try:
             # Step 1: Normalize text
-            clean_text = self.normalize_service.clean_and_normalize(text)
+            # clean_text = self.normalize_service.clean_and_normalize(text)
 
 
             # Step 2: Mask PII
             # masked_text, pii_map = self.pii_service.mask_pii(clean_text)
-            masked_text = clean_text["cleaned_text"]
-            print(f"Masked Text: {masked_text}")
+            # masked_text = clean_text["cleaned_text"]
+            # print(f"Masked Text: {masked_text}")
             # Step 3: Build prompt (tone-aware)
-            prompt = self.prompt_service.build_prompt(masked_text, tone)
+            prompt = self.prompt_service.build_prompt(text, tone)
 
             # Step 4: Send to Gemini
             candidate_outputs  =  self.gemini_repo.run_gemini(prompt)
@@ -49,18 +49,18 @@ class HumanizeService:
             # grammatically_fixed = self.grammar_service.correct_text(restored_output)
 
             # Step 7: Evaluate scoring
-            scores = []
-            for candidate in candidate_outputs:
-                score = self.scoring_service.evaluate_postprocessed_text(candidate)
-                scores.append(score)
+            # scores = []
+            # for candidate in candidate_outputs:
+            #     score = self.scoring_service.evaluate_postprocessed_text(candidate)
+            #     scores.append(score)
             
             # Pick candidate with highest overall score
-            best_idx = max(range(len(scores)), key=lambda i: scores[i]["overall_score"])
-            best_output = candidate_outputs[best_idx]
-            best_score = scores[best_idx]
+            # best_idx = max(range(len(scores)), key=lambda i: scores[i]["overall_score"])
+            # best_output = candidate_outputs[best_idx]
+            # best_score = scores[best_idx]
             return HumanizeResponse(
                 input_length=len(text),
-                humanized_text=candidate_outputs[best_idx],
+                humanized_text=candidate_outputs,
                 score=None,
                 model=self.gemini_repo.model_name,
                 tone=tone

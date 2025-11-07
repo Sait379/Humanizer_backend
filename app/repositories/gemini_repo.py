@@ -42,7 +42,7 @@ class GeminiRepo:
         
         # Configuration for quality (Nucleus Sampling) and number of candidates
         config = GenerateContentConfig(
-            temperature=0.85, 
+            temperature=0.3, 
             top_p=0.9,        
             candidate_count=candidate_count
         )
