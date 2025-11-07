@@ -9,5 +9,6 @@ class Settings(BaseModel):
     PROJECT_NAME: str = os.getenv("PROJECT_NAME", "text_humanizer")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     MODEL_NAME: str = os.getenv("MODEL_NAME", "gemini-2.5-flash")
+    HUMANIZER_NAME: str = os.getenv("HUMANIZER_NAME", "text_humanizer")
 
 settings = Settings()

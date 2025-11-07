@@ -9,4 +9,4 @@ app.include_router(humanize_router, prefix="/api/v1")
 
 @app.get("/")
 def root():
-    return {"message": f"{settings.PROJECT_NAME} API is running!"}
+    return {"message": f"{settings.HUMANIZER_NAME} API is running!"}
