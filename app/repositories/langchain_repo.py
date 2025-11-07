@@ -12,7 +12,7 @@ class LangChainRepo:
             google_api_key=settings.GEMINI_API_KEY
         )
 
-    def run(self, prompt: str) -> str:
+    def run_gemini(self, prompt: str) -> str:
         """Send prompt to Gemini and return response."""
         response = self.llm.invoke([HumanMessage(content=prompt)])
         return response.content

@@ -1,7 +1,7 @@
 # app/api/v1/humanize_route.py
 from fastapi import APIRouter, HTTPException
 from app.schemas.humanize_schema import HumanizeRequest, HumanizeResponse
-from app.services.prompt_service import PromptService
+from app.services.common.prompt_service import PromptService
 from app.repositories.langchain_repo import LangChainRepo
 
 router = APIRouter()
@@ -13,7 +13,7 @@ async def humanize_text(payload: HumanizeRequest):
         prompt = prompt_service.build_prompt(payload.text)
 
         langchain_repo = LangChainRepo()
-        result = langchain_repo.run(prompt)
+        result = langchain_repo.run_gemini(prompt)
 
         return HumanizeResponse(result=result)
     except Exception as e:
