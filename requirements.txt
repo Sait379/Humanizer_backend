@@ -8,3 +8,4 @@ google-genai
 pydantic
 langchain-core 
 langchain-community
+textstat
