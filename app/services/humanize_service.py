@@ -1,47 +1,64 @@
 # app/services/humanize_service.py
+
 import time
+import logging
 from app.services.common.normalize_service import NormalizeService
 from app.schemas.humanize_schema import HumanizeResponse
 from app.services.common.prompt_service import PromptService
 from app.repositories.gemini_repo import GeminiRepo
 from app.services.common.scoring_service import ScoringService
-import logging
 
 logger = logging.getLogger(__name__)
 
 
 class HumanizeService:
+    """
+    Orchestrates the full text humanization pipeline.
+    Each stage of the pipeline performs a key transformation step.
+    """
 
     def __init__(self):
+        # Initialize dependent services
         self.normalize_service = NormalizeService()
         self.prompt_service = PromptService()
         self.gemini_repo = GeminiRepo()
         self.scoring_service = ScoringService()
 
     async def run_pipeline(self, text: str, tone: str = "neutral") -> HumanizeResponse:
-        start_time = time.perf_counter()  # Start timing
+        start_time = time.perf_counter()  # Start timing the full pipeline
         try:
 
-            # --- 2️⃣ Preprocess ---
+            # 🧹 STEP 1: Text Normalization
             clean_text = self.normalize_service.clean_and_normalize(text)
-            logger.debug(f"[CLEAN] Cleaned text ready for prompt build.")
+            logger.debug("[CLEAN] Cleaned text ready for prompt build.")
 
-            # --- 3️⃣ Build Prompt ---
+            # 🧩 STEP 2: PII Masking (Optional / Future Feature)
+            # masked_text, pii_map = self.pii_service.mask_pii(clean_text)
+            # masked_text = clean_text["cleaned_text"]
+
+            # 🧠 STEP 3: Prompt Construction
             final_prompt = self.prompt_service.build_dynamic_prompt(
                 clean_text["cleaned_text"], tone
             )
 
-            # --- 4️⃣ Gemini Rewrite ---
+            # 🤖 STEP 4: Gemini Model Invocation
             best_output = self.gemini_repo.run_gemini(final_prompt, tone)
-            logger.debug(f"[GEMINI] Response received successfully.")
+            logger.debug("[GEMINI] Response received successfully.")
 
-            # --- 5️⃣ Postprocess + Score ---
+            # 🪄 STEP 5: Postprocessing (PII Restore / Grammar Fix)
+
+            # 📊 STEP 6: Scoring & Quality Evaluation
+       
             score = self.scoring_service.evaluate_postprocessed_text(best_output)
             logger.info(f"[SCORE] Flesch={score['flesch_reading_ease']} | Overall={score['overall_score']}")
 
-            end_time = time.perf_counter()  # End timing
-            response_time = round(end_time - start_time, 3)  # in seconds
+          
+            # ⏱️ STEP 7: Compute Response Time
+    
+            end_time = time.perf_counter()
+            response_time = round(end_time - start_time, 3)  # seconds
 
+            # ✅ STEP 8: Build and Return Response
             return HumanizeResponse(
                 input_length=len(text),
                 humanized_text=best_output,
@@ -53,6 +70,11 @@ class HumanizeService:
             )
 
         except Exception as e:
+ 
+            # ❌ ERROR HANDLING
+            end_time = time.perf_counter()
+            response_time = round(end_time - start_time, 3)
+
             logger.exception(f"Pipeline failed: {e}")
             return HumanizeResponse(
                 input_length=len(text),
