@@ -1,53 +1,77 @@
 import os
 from google import genai
 from google.genai.types import Content, Part, GenerateContentConfig
-from app.core.config import settings # Assuming this exists and contains MODEL_NAME and GEMINI_API_KEY
+from app.core.config import settings  # Ensure this holds MODEL_NAME and GEMINI_API_KEY
+
 
 class GeminiRepo:
     """
     Repository for interacting with the Gemini API using the official Google GenAI SDK.
     
-    This class is configured to always request three candidate strings, allowing the
-    caller to select the best result for quality control.
+    This class now requests **a single best output** from Gemini, relying on the model's
+    built-in quality ranking instead of fetching multiple candidates.
     """
 
     def __init__(self):
-        """Initializes the repository and the Gemini Client."""
+        """Initializes the repository and Gemini client."""
         api_key = settings.GEMINI_API_KEY
         if not api_key:
-            # Note: This is a placeholder check. In production, API key handling
-            # should use secrets management or environment variables.
-            raise ValueError("❌ GEMINI_API_KEY not found in environment.")
-            
-        self.client = genai.Client(api_key=api_key)
+            raise ValueError("❌ GEMINI_API_KEY not found in environment variables.")
         
-        # Use settings model or default to the flash model
+        self.client = genai.Client(api_key=api_key)
         self.model_name = settings.MODEL_NAME or "gemini-2.5-flash"
 
-    def run_gemini(self, prompt: str) -> list[str]:
+    def get_config_for_tone(self, tone: str) -> GenerateContentConfig:
         """
-        Sends a single prompt to the Gemini API and returns a list of up to three 
-        rewritten candidate texts.
+        Returns tone-aware configuration for generation settings.
+        """
+        tone = tone.lower().strip()
+        tone_configs = {
+            "friendly": {
+                "temperature": 0.7,   # slightly creative and warm
+                "top_p": 0.95
+            },
+            "neutral": {
+                "temperature": 0.4,   # balanced and objective
+                "top_p": 0.9
+            },
+            "formal": {
+                "temperature": 0.3,   # controlled, precise, less expressive
+                "top_p": 0.85
+            },
+            "empathetic": {
+                "temperature": 0.65,  # gentle creativity, emotionally aware
+                "top_p": 0.9
+            },
+            "professional": {
+                "temperature": 0.35,  # concise, confident, minimal fluff
+                "top_p": 0.85
+            },
+            "casual": {
+                "temperature": 0.8,   # relaxed and conversational
+                "top_p": 0.95
+            },
+        }
+
+        cfg = tone_configs.get(tone, tone_configs["neutral"])
+        return GenerateContentConfig(
+            temperature=cfg["temperature"],
+            top_p=cfg["top_p"]
+        )
+
+    def run_gemini(self, prompt: str, tone: str) -> str:
+        """
+        Sends a single prompt to the Gemini API and returns the best rewritten text.
         
         Args:
-            prompt (str): The combined instruction and text to be rewritten.
+            prompt (str): The text prompt or instruction to humanize.
+            tone (str): Desired tone ("friendly", "neutral", "formal", etc.)
             
         Returns:
-            list[str]: A list containing the rewritten texts. Returns an empty 
-                       list or a list with an error message on failure.
+            str: The best rewritten output text from Gemini.
         """
-        
-        # Always request 3 candidates for selection/scoring
-        candidate_count = 3
-        
-        # Configuration for quality (Nucleus Sampling) and number of candidates
-        config = GenerateContentConfig(
-            temperature=0.3, 
-            top_p=0.9,        
-            candidate_count=candidate_count
-        )
-        print(f"config: {config}")
         try:
+            config = self.get_config_for_tone(tone)
             contents = [Content(role="user", parts=[Part(text=prompt)])]
 
             response = self.client.models.generate_content(
@@ -55,26 +79,13 @@ class GeminiRepo:
                 contents=contents,
                 config=config,
             )
-            print(f"Gemini response: {response}")
-            
-            # --- CANDIDATE EXTRACTION ---
-            if not response.candidates:
-                return []
-            
-            # Extract all valid candidate texts into simple strings
-            candidate_strings = []
-            for candidate in response.candidates:
-                # Safety check for content, parts, and text existence
-                if (candidate.content and 
-                    candidate.content.parts and 
-                    candidate.content.parts[0].text):
-                    text_to_append = str(candidate.content.parts[0].text).strip()
-                    candidate_strings.append(text_to_append)
-            
-            # Always return the list of simple strings
-            return candidate_strings
-            
+
+            # Gemini already returns the top-ranked response by default.
+            # Safely extract its text.
+            if not response or not getattr(response, "text", None):
+                return "⚠️ Gemini returned no text output."
+
+            return response.text.strip()
+
         except Exception as e:
-            error_message = f"Error: Failed to connect or process with Gemini SDK: {e}"
-    
-            return [error_message]
+            return f"❌ Error while calling Gemini API: {str(e)}"

@@ -1,79 +1,66 @@
 # app/services/humanize_service.py
-
+import time
 from app.services.common.normalize_service import NormalizeService
-# from app.services.common.pii_service import PIIService
-from click import prompt
 from app.schemas.humanize_schema import HumanizeResponse
 from app.services.common.prompt_service import PromptService
-from app.repositories.gemini_repo import GeminiRepo   # ✅ replaced here
+from app.repositories.gemini_repo import GeminiRepo
 from app.services.common.scoring_service import ScoringService
-# from app.services.grammar_service import GrammarService
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class HumanizeService:
-    """
-    Orchestrates the full text humanization pipeline.
-    """
 
     def __init__(self):
         self.normalize_service = NormalizeService()
-        # self.pii_service = PIIService()
         self.prompt_service = PromptService()
-        self.gemini_repo = GeminiRepo()               # ✅ uses Gemini now
+        self.gemini_repo = GeminiRepo()
         self.scoring_service = ScoringService()
-        # self.grammar_service = GrammarService()
 
-    async def run_pipeline(self, text: str, tone: str = "neutral"):
-        """
-        Executes the end-to-end pipeline using Gemini API.
-        """
+    async def run_pipeline(self, text: str, tone: str = "neutral") -> HumanizeResponse:
+        start_time = time.perf_counter()  # Start timing
         try:
-            # Step 1: Normalize text
-            # clean_text = self.normalize_service.clean_and_normalize(text)
 
+            # --- 2️⃣ Preprocess ---
+            clean_text = self.normalize_service.clean_and_normalize(text)
+            logger.debug(f"[CLEAN] Cleaned text ready for prompt build.")
 
-            # Step 2: Mask PII
-            # masked_text, pii_map = self.pii_service.mask_pii(clean_text)
-            # masked_text = clean_text["cleaned_text"]
-            # print(f"Masked Text: {masked_text}")
-            # Step 3: Build prompt (tone-aware)
-            prompt = self.prompt_service.build_prompt(text, tone)
+            # --- 3️⃣ Build Prompt ---
+            final_prompt = self.prompt_service.build_dynamic_prompt(
+                clean_text["cleaned_text"], tone
+            )
 
-            # Step 4: Send to Gemini
-            candidate_outputs  =  self.gemini_repo.run_gemini(prompt)
+            # --- 4️⃣ Gemini Rewrite ---
+            best_output = self.gemini_repo.run_gemini(final_prompt, tone)
+            logger.debug(f"[GEMINI] Response received successfully.")
 
-            # Step 5: Restore PII
-            # restored_output = self.pii_service.restore_pii(model_output, pii_map)
+            # --- 5️⃣ Postprocess + Score ---
+            score = self.scoring_service.evaluate_postprocessed_text(best_output)
+            logger.info(f"[SCORE] Flesch={score['flesch_reading_ease']} | Overall={score['overall_score']}")
 
-            # Step 6: Grammar correction
-            # grammatically_fixed = self.grammar_service.correct_text(restored_output)
+            end_time = time.perf_counter()  # End timing
+            response_time = round(end_time - start_time, 3)  # in seconds
 
-            # Step 7: Evaluate scoring
-            # scores = []
-            # for candidate in candidate_outputs:
-            #     score = self.scoring_service.evaluate_postprocessed_text(candidate)
-            #     scores.append(score)
-            
-            # Pick candidate with highest overall score
-            # best_idx = max(range(len(scores)), key=lambda i: scores[i]["overall_score"])
-            # best_output = candidate_outputs[best_idx]
-            # best_score = scores[best_idx]
             return HumanizeResponse(
                 input_length=len(text),
-                humanized_text=candidate_outputs,
-                score=None,
+                humanized_text=best_output,
+                score=score,
+                response_time_in_seconds=response_time,
                 model=self.gemini_repo.model_name,
-                tone=tone
+                tone=tone,
+                message="Processed via Gemini pipeline."
             )
 
         except Exception as e:
+            logger.exception(f"Pipeline failed: {e}")
             return HumanizeResponse(
                 input_length=len(text),
                 humanized_text="",
-                model=self.gemini_repo.model_name,
+                model=getattr(self.gemini_repo, "model_name", "unknown"),
                 tone=tone,
                 score=None,
+                response_time_in_seconds=response_time,
                 error=str(e),
-                message="Pipeline failed during humanization"
+                message="Pipeline failed during humanization."
             )
-
