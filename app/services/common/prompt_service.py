@@ -24,6 +24,7 @@ class PromptService:
     "Keep the meaning and tone neutral, but prefer short sentences (12–18 words average). "
     "Avoid long clauses or stacked commas. "
     "Target Flesch Reading Ease between 65 and 80, Grade Level between 7 and 9.\n\n"
+    "Keep the placeholders, URLs, and emojis unchanged.\n\n"
     "Example:\n"
     "Input: The utilization of advanced computational methodologies improves operational efficiency.\n"
     "Output: Using advanced computing methods makes work faster and easier.\n\n"

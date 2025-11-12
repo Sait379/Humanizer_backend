@@ -233,7 +233,6 @@ class NormalizeService:
     # 4️⃣ --- Restoration ---
     def restore(self, text: str, mapping: dict) -> str:
         """Restore masked URLs and emojis back into the text."""
-        text="Hey there! [EMOJI_3] I recently came across this super cool article on [URL_1] about AI writing — it’s honestly mind-blowing [EMOJI_4]! The way these tools can mimic human creativity is amazing, though sometimes the tone still feels a bit robotic [EMOJI_5]. By the way, if you want to check out some examples, visit [URL_2] or follow my updates on Twitter @ayushi_ai [EMOJI_6]. I really believe AI shouldn’t replace writers — it should help them write faster and better [EMOJI_7]! What do you think?"
         restored_text = text
         # Replace placeholders back with original items
         for placeholder, original in mapping.items():
@@ -256,19 +255,19 @@ class NormalizeService:
         }
 
 
-if __name__ == "__main__":
-    service = NormalizeService()
-    sample_text = """Hey there!! 😄 I dont recently came across this super cant cool article on https://openai.com about AI writing — it’s honestly mind-blowing 🤯!! The way these tools can mimic human creativity is just awesome, though sometimes the tone feels a bit robotic 😅. 
-BTW, if you wanna check some examples, visit www.medium.com or follow my updates on Twitter @ayushi_ai 🤗. 
-Also, I think AI shouldn’t replace writers but empower them to write faster & better 💪!! What do you think??"""
+# if __name__ == "__main__":
+#     service = NormalizeService()
+#     sample_text = """Hey there!! 😄 I dont recently came across this super cant cool article on https://openai.com about AI writing — it’s honestly mind-blowing 🤯!! The way these tools can mimic human creativity is just awesome, though sometimes the tone feels a bit robotic 😅. 
+# BTW, if you wanna check some examples, visit www.medium.com or follow my updates on Twitter @ayushi_ai 🤗. 
+# Also, I think AI shouldn’t replace writers but empower them to write faster & better 💪!! What do you think??"""
 
-    result = service.clean_and_normalize(sample_text)
+#     result = service.clean_and_normalize(sample_text)
 
-    print("\n🔹 Original Text:")
-    print(sample_text)
-    print("\n🔹 After Preclean + Mask + Normalize:")
-    print(result["cleaned_text"])
-    print("\n🔹 Restored Text:")
-    print(result["restored_text"])
-    print("\n🔹 Mask Mapping:")
-    print(result["mask_map"])
+#     print("\n🔹 Original Text:")
+#     print(sample_text)
+#     print("\n🔹 After Preclean + Mask + Normalize:")
+#     print(result["cleaned_text"])
+#     print("\n🔹 Restored Text:")
+#     print(result["restored_text"])
+#     print("\n🔹 Mask Mapping:")
+#     print(result["mask_map"])
