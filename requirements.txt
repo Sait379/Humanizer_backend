@@ -14,3 +14,4 @@ textblob
 language_tool_python
 cleantext
 contractions
+spacy
