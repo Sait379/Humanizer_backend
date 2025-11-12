@@ -1,9 +1,9 @@
 # services/normalize_service.py
 
 import re, html, emoji, unicodedata, contractions, textstat
-from textblob import TextBlob
+# from textblob import TextBlob
 import language_tool_python
-from cleantext import clean
+# from cleantext import clean
 
 tool = language_tool_python.LanguageTool('en-US')
 
