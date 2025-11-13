@@ -41,20 +41,20 @@ class GrammarService:
 
 
 # ✅ Run standalone for testing
-if __name__ == "__main__":
-    print("\n🧩 Testing GrammarService...\n")
-    service = GrammarService()
+# if __name__ == "__main__":
+#     print("\n🧩 Testing GrammarService...\n")
+#     service = GrammarService()
 
-    sample_text = (
-        "He go to school everyday and dont like maths. "
-        "Its raining since two days, so he didnt went outside."
-    )
+#     sample_text = (
+#         "He go to school everyday and dont like maths. "
+#         "Its raining since two days, so he didnt went outside."
+#     )
 
-    print("Original Text:\n", sample_text)
-    print("\nDetected Issues:")
-    issues = service.detect_issues(sample_text)
-    for i, issue in enumerate(issues, 1):
-        print(f"{i}. [{issue['rule_id']}] {issue['message']} → Suggestions: {issue['suggestions']}")
+#     print("Original Text:\n", sample_text)
+#     print("\nDetected Issues:")
+#     issues = service.detect_issues(sample_text)
+#     for i, issue in enumerate(issues, 1):
+#         print(f"{i}. [{issue['rule_id']}] {issue['message']} → Suggestions: {issue['suggestions']}")
 
-    corrected = service.correct_text(sample_text)
-    print("\n✅ Corrected Text:\n", corrected)
+#     corrected = service.correct_text(sample_text)
+#     print("\n✅ Corrected Text:\n", corrected)

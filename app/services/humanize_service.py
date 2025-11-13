@@ -7,6 +7,8 @@ from app.schemas.humanize_schema import HumanizeResponse
 from app.services.common.prompt_service import PromptService
 from app.repositories.gemini_repo import GeminiRepo
 from app.services.common.scoring_service import ScoringService
+from app.services.common.pii_service import PiiService
+from app.services.common.grammar_service import GrammarService
 
 logger = logging.getLogger(__name__)
 
@@ -23,32 +25,67 @@ class HumanizeService:
         self.prompt_service = PromptService()
         self.gemini_repo = GeminiRepo()
         self.scoring_service = ScoringService()
+        self.pii_service = PiiService()              # ✅ new
+        self.grammar_service = GrammarService()      # ✅ new
 
-    async def run_pipeline(self, text: str, tone: str = "neutral") -> HumanizeResponse:
+
+    async def run_pipeline(self, text: str, tone: str = "neutral",
+                           enable_pii: bool = True,
+                           pii_strategy: str = "hash",   # "hash" | "placeholder" | "redact"
+                           grammar_passes: int = 2) -> HumanizeResponse:
         start_time = time.perf_counter()  # Start timing the full pipeline
         try:
 
             # 🧹 STEP 1: Text Normalization
             clean_text = self.normalize_service.clean_and_normalize(text)
-            print(f"Clean text : {clean_text['cleaned_text']}")
+            base_clean = clean_text["cleaned_text"]
             logger.debug("[CLEAN] Cleaned text ready for prompt build.")
 
             # 🧩 STEP 2: PII Masking (Optional / Future Feature)
-            # masked_text, pii_map = self.pii_service.mask_pii(clean_text)
-            # masked_text = clean_text["cleaned_text"]
+            masked_for_prompt = base_clean
+            pii_map = {}
+            if enable_pii:
+                try:
+                    masked_for_prompt, pii_map = self.pii_service.mask_pii(base_clean, strategy=pii_strategy)
+                    logger.debug(f"[PII] Masked {len(pii_map)} items with strategy={pii_strategy}.")
+                except Exception as pii_err:
+                    logger.warning(f"[PII] Masking skipped due to error: {pii_err}")
 
             # 🧠 STEP 3: Prompt Construction
             final_prompt = self.prompt_service.build_dynamic_prompt(
-                clean_text["cleaned_text"], tone
+                masked_for_prompt, tone
             )
 
             # 🤖 STEP 4: Gemini Model Invocation
             best_output = self.gemini_repo.run_gemini(final_prompt, tone)
             logger.debug("[GEMINI] Response received successfully.")
 
-            # 🪄 STEP 5: Postprocessing (PII Restore / Grammar Fix / Emoji Restoring)
-            final_output = self.normalize_service.restore(best_output, clean_text["mask_map"])
-            print(f"Final output : {final_output}")
+            # 🔁 STEP 5A: Restore PII first (NEW)
+            post_llm = best_output
+            if enable_pii and pii_map:
+                try:
+                    post_llm = self.pii_service.restore_pii(best_output, pii_map)
+                    logger.debug("[PII] Restoration complete.")
+                except Exception as restore_err:
+                    logger.warning(f"[PII] Restoration failed, returning LLM text as-is: {restore_err}")
+
+            # 🪄 STEP 5B: Normalize/restore any non-PII masks your NormalizeService uses
+            # (If your NormalizeService.restore expects 'mask_map' (e.g., emojis), keep it.)
+            try:
+                final_output = self.normalize_service.restore(
+                    post_llm,
+                    clean_text.get("mask_map", {})  # safe default
+                )
+            except Exception as norm_restore_err:
+                logger.warning(f"[NORMALIZE] Restore step failed, using post-LLM text: {norm_restore_err}")
+                final_output = post_llm
+
+            # # ✍️ STEP 5C: Grammar correction (NEW)
+            # try:
+            #     final_output = self.grammar_service.correct_text(final_output, passes=grammar_passes)
+            #     logger.debug(f"[GRAMMAR] Applied LanguageTool in {grammar_passes} passes.")
+            # except Exception as gram_err:
+            #     logger.warning(f"[GRAMMAR] Skipped due to error: {gram_err}")
 
             # 📊 STEP 6: Scoring & Quality Evaluation
        
@@ -69,7 +106,7 @@ class HumanizeService:
                 response_time_in_seconds=response_time,
                 model=self.gemini_repo.model_name,
                 tone=tone,
-                message="Processed via Gemini pipeline."
+                message="Processed via Gemini pipeline + PII mask/restore + grammar pipeline."
             )
 
         except Exception as e:

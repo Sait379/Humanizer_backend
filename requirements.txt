@@ -14,5 +14,5 @@ textblob
 language_tool_python
 cleantext
 contractions
-# spacy
-# en-core-web-sm
+spacy
+en-core-web-sm
