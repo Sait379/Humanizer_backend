@@ -8,7 +8,7 @@ from app.services.common.prompt_service import PromptService
 from app.repositories.gemini_repo import GeminiRepo
 from app.services.common.scoring_service import ScoringService
 from app.services.common.pii_service import PiiService
-from app.services.common.grammar_service import GrammarService
+# from app.services.common.grammar_service import GrammarService
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +26,12 @@ class HumanizeService:
         self.gemini_repo = GeminiRepo()
         self.scoring_service = ScoringService()
         self.pii_service = PiiService()              # ✅ new
-        self.grammar_service = GrammarService()      # ✅ new
-
+        
 
     async def run_pipeline(self, text: str, tone: str = "neutral",
                            enable_pii: bool = True,
                            pii_strategy: str = "hash",   # "hash" | "placeholder" | "redact"
-                           grammar_passes: int = 2) -> HumanizeResponse:
+                           ) -> HumanizeResponse:
         start_time = time.perf_counter()  # Start timing the full pipeline
         try:
 
@@ -80,13 +79,6 @@ class HumanizeService:
                 logger.warning(f"[NORMALIZE] Restore step failed, using post-LLM text: {norm_restore_err}")
                 final_output = post_llm
 
-            # # ✍️ STEP 5C: Grammar correction (NEW)
-            # try:
-            #     final_output = self.grammar_service.correct_text(final_output, passes=grammar_passes)
-            #     logger.debug(f"[GRAMMAR] Applied LanguageTool in {grammar_passes} passes.")
-            # except Exception as gram_err:
-            #     logger.warning(f"[GRAMMAR] Skipped due to error: {gram_err}")
-
             # 📊 STEP 6: Scoring & Quality Evaluation
        
             score = self.scoring_service.evaluate_postprocessed_text(final_output)
@@ -106,7 +98,7 @@ class HumanizeService:
                 response_time_in_seconds=response_time,
                 model=self.gemini_repo.model_name,
                 tone=tone,
-                message="Processed via Gemini pipeline + PII mask/restore + grammar pipeline."
+                message="Processed via Gemini pipeline."
             )
 
         except Exception as e:
