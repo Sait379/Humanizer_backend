@@ -170,7 +170,7 @@
 
 
 # services/normalize_service.py
-import re, html, emoji, unicodedata, contractions, textstat
+import re, html, emoji, unicodedata, contractions
 from textblob import TextBlob
 import language_tool_python
 from cleantext import clean
@@ -233,7 +233,7 @@ class NormalizeService:
     # 4️⃣ --- Restoration ---
     def restore(self, text: str, mapping: dict) -> str:
         """Restore masked URLs and emojis back into the text."""
-        text="Hey there! [EMOJI_3] I recently came across this super cool article on [URL_1] about AI writing — it’s honestly mind-blowing [EMOJI_4]! The way these tools can mimic human creativity is amazing, though sometimes the tone still feels a bit robotic [EMOJI_5]. By the way, if you want to check out some examples, visit [URL_2] or follow my updates on Twitter @ayushi_ai [EMOJI_6]. I really believe AI shouldn’t replace writers — it should help them write faster and better [EMOJI_7]! What do you think?"
+       
         restored_text = text
         # Replace placeholders back with original items
         for placeholder, original in mapping.items():
