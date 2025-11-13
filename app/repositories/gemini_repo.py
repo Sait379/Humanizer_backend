@@ -27,35 +27,18 @@ class GeminiRepo:
         """
         tone = tone.lower().strip()
         tone_configs = {
-            "friendly": {
-                "temperature": 0.7,   # slightly creative and warm
-                "top_p": 0.95
-            },
-            "neutral": {
-                "temperature": 0.4,   # balanced and objective
-                "top_p": 0.9
-            },
-            "formal": {
-                "temperature": 0.3,   # controlled, precise, less expressive
-                "top_p": 0.85
-            },
-            "empathetic": {
-                "temperature": 0.65,  # gentle creativity, emotionally aware
-                "top_p": 0.9
-            },
-            "professional": {
-                "temperature": 0.35,  # concise, confident, minimal fluff
-                "top_p": 0.85
-            },
-            "casual": {
-                "temperature": 0.8,   # relaxed and conversational
-                "top_p": 0.95
-            },
+        "friendly":   {"temperature": 0.7, "top_p": 0.95, "top_k": 40},
+        "neutral":    {"temperature": 0.4, "top_p": 0.9,  "top_k": 30},
+        "formal":     {"temperature": 0.3, "top_p": 0.85, "top_k": 20},
+        "empathetic": {"temperature": 0.65,"top_p": 0.9,  "top_k": 40},
+        "professional":{"temperature":0.35,"top_p": 0.85, "top_k": 25},
+        "casual":     {"temperature": 0.8, "top_p": 0.95, "top_k": 50},
         }
 
         cfg = tone_configs.get(tone, tone_configs["neutral"])
         return GenerateContentConfig(
             temperature=cfg["temperature"],
+            top_k=cfg["top_k"],
             top_p=cfg["top_p"]
         )
 
