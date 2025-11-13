@@ -86,14 +86,14 @@ class PiiService:
 
         return masked_text, restore_map
 
-    # def restore_pii(self, masked_text: str, restore_map: Dict[str, str]) -> str:
-    #     if not masked_text or not restore_map:
-    #         return masked_text
-    #     restored = masked_text
-    #     # Replace longer placeholders first
-    #     for placeholder, original in sorted(restore_map.items(), key=lambda x: len(x[0]), reverse=True):
-    #         restored = restored.replace(placeholder, original)
-    #     return restored
+    def restore_pii(self, masked_text: str, restore_map: Dict[str, str]) -> str:
+        if not masked_text or not restore_map:
+            return masked_text
+        restored = masked_text
+        # Replace longer placeholders first
+        for placeholder, original in sorted(restore_map.items(), key=lambda x: len(x[0]), reverse=True):
+            restored = restored.replace(placeholder, original)
+        return restored
 
 # Example usage
 if __name__ == "__main__":
