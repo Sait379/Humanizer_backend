@@ -102,25 +102,25 @@ class ScoringService:
 
         return delta
 
-if __name__ == "__main__":
-    # ✅ Manual testing block
-    service = ScoringService()
+# if __name__ == "__main__":
+#     # ✅ Manual testing block
+#     service = ScoringService()
 
-    # Example input texts
-    pre_text = "The utilization of advanced computational methodologies improves operational efficiency."
-    post_text = "Using better computer methods makes work faster."
+#     # Example input texts
+#     pre_text = "The utilization of advanced computational methodologies improves operational efficiency."
+#     post_text = "Using better computer methods makes work faster."
 
-    # Evaluate both
-    pre_score = service.evaluate_preprocessed_text(pre_text)
-    post_score = service.evaluate_postprocessed_text(post_text)
-    comparison = service.compare_scores(pre_score, post_score)
+#     # Evaluate both
+#     pre_score = service.evaluate_preprocessed_text(pre_text)
+#     post_score = service.evaluate_postprocessed_text(post_text)
+#     comparison = service.compare_scores(pre_score, post_score)
 
-    # Print outputs
-    print("\n--- Preprocessed Text Score ---")
-    print(pre_score)
+#     # Print outputs
+#     print("\n--- Preprocessed Text Score ---")
+#     print(pre_score)
 
-    print("\n--- Postprocessed Text Score ---")
-    print(post_score)
+#     print("\n--- Postprocessed Text Score ---")
+#     print(post_score)
 
-    print("\n--- Improvement Comparison ---")
-    print(comparison)
+#     print("\n--- Improvement Comparison ---")
+#     print(comparison)

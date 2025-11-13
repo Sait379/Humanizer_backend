@@ -96,11 +96,11 @@ class PiiService:
         return restored
 
 # Example usage
-if __name__ == "__main__":
-    service = PiiService()
-    text = "Ayushi Gupta lives in Delhi. Email: ayushi@example.com, PHONE: +91-9876543210, PAN: ABCDE1234F."
-    masked, mapping = service.mask_pii(text)
-    print("Masked:\n", masked)
-    print("\nMapping:\n", mapping)
-    # restored = service.restore_pii(masked, mapping)
-    # print("\nRestored:\n", restored)
+# if __name__ == "__main__":
+#     service = PiiService()
+#     text = "Ayushi Gupta lives in Delhi. Email: ayushi@example.com, PHONE: +91-9876543210, PAN: ABCDE1234F."
+#     masked, mapping = service.mask_pii(text)
+#     print("Masked:\n", masked)
+#     print("\nMapping:\n", mapping)
+#     # restored = service.restore_pii(masked, mapping)
+#     # print("\nRestored:\n", restored)
