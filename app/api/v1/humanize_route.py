@@ -6,6 +6,7 @@ from app.services.humanize_service import HumanizeService
 
 router = APIRouter()
 
+humanize_service = HumanizeService()
 @router.post("/humanize", response_model=HumanizeResponse)
 async def humanize_text(payload: HumanizeRequest):
     """
@@ -13,7 +14,6 @@ async def humanize_text(payload: HumanizeRequest):
     """
     try:
         # Initialize the orchestrator
-        humanize_service = HumanizeService()
 
         # Run the full pipeline (normalization → masking → prompt → Gemini → grammar → scoring)
         result = await humanize_service.run_pipeline(

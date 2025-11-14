@@ -19,65 +19,75 @@ class PromptService:
 
     PROMPTS = {
     "neutral": (
-    "[INSTRUCTION] Rewrite the text so it feels naturally written by a person, not by an AI or editor. "
-    "Use clear, simple sentences and everyday vocabulary. "
-    "Keep the meaning and tone neutral, but prefer short sentences (12–18 words average). "
-    "Avoid long clauses or stacked commas. "
-    "Target Flesch Reading Ease between 65 and 80, Grade Level between 7 and 9.\n\n"
-    "Keep the placeholders, URLs, and emojis unchanged.\n\n"
-    "Example:\n"
-    "Input: The utilization of advanced computational methodologies improves operational efficiency.\n"
-    "Output: Using advanced computing methods makes work faster and easier.\n\n"
-    "Text:\n{text}"
-),
+        "[INSTRUCTION] Rewrite the text so it reads naturally, as if written by a clear-thinking human. "
+        "Use straightforward vocabulary and short, clean sentences (average 12–18 words). "
+        "Avoid stacked commas, over-formal wording, long clauses, filler phrases, or robotic transitions. "
+        "Keep the tone strictly neutral—no warmth, no formality shift, no emotional coloring. Keep meaning identical. "
+        "Target Flesch Reading Ease 65–80, Grade Level 7–9.\n\n"
+        "Do NOT alter emojis, URLs, placeholders, quoted text, or code-like fragments.\n\n"
+        "Example:\n"
+        "Input: The utilization of advanced computational methodologies improves operational efficiency.\n"
+        "Output: Using advanced computing methods makes work faster and easier.\n\n"
+        "Text:\n{text}"
+    ),
 
     "friendly": (
-        "[INSTRUCTION] Sound like a warm colleague chatting naturally. "
-        "Use positive, easy language with short sentences (Flesch 65–80 range). "
-        "Keep it upbeat, human, and clear while keeping the same meaning.\n\n"
+        "[INSTRUCTION] Rewrite the text in a warm, upbeat, and naturally conversational tone—like a friendly colleague. "
+        "Use light positivity, natural contractions, and short, easy sentences (12–16 words). "
+        "Keep meaning identical and avoid exaggeration, slang, or emotional overreach. "
+        "Target Flesch Reading Ease 68–82, Grade Level 7–9.\n\n"
+        "Keep emojis, URLs, and placeholders unchanged.\n\n"
         "Example:\n"
         "Input: The organization will implement a workflow optimization process on Monday.\n"
-        "Output: Hey team! We’re rolling out a new way to make work smoother starting Monday.\n\n"
+        "Output: Hey team! We’re rolling out a smoother way to get things done starting Monday.\n\n"
         "Text:\n{text}"
     ),
 
     "formal": (
-        "[INSTRUCTION] Write in a precise, polished, and professional tone suitable for academic or official contexts. "
-        "Avoid slang and contractions. Use clear structure and moderate sentence length "
-        "(target Grade 10–12 readability, Flesch 50–65).\n\n"
+        "[INSTRUCTION] Rewrite the text in a polished, highly structured, and formal tone suitable for academic, legal, or "
+        "official communication. Avoid contractions, conversational cues, idioms, or casual phrasing. "
+        "Use precise vocabulary and moderately long sentences (18–26 words). "
+        "Target Grade Level 10–12, Flesch Reading Ease 45–60.\n\n"
+        "Do not alter URLs, placeholders, or factual meaning.\n\n"
         "Example:\n"
         "Input: The team will start using new workflow methods on Monday.\n"
-        "Output: The organization has announced that workflow optimization measures will commence on Monday.\n\n"
+        "Output: The organization has announced that revised workflow procedures will commence on Monday.\n\n"
         "Text:\n{text}"
     ),
 
     "professional": (
-        "[INSTRUCTION] Rewrite with a confident, business-like tone. "
-        "Keep it concise, clear, and results-focused (Grade 8–10, Flesch 60–75). "
-        "Avoid fluff; sound like corporate communication done right.\n\n"
+        "[INSTRUCTION] Rewrite the text in a concise, confident, and business-professional tone. "
+        "Use clear structure, direct language, and outcome-focused phrasing. "
+        "Avoid corporate clichés, fluff, or overly formal academic language. "
+        "Sentence length 14–20 words. Target Flesch Reading Ease 55–70, Grade Level 8–10.\n\n"
+        "Do not change URLs, placeholders, metrics, or meaning.\n\n"
         "Example:\n"
         "Input: The company will introduce a new system for optimizing workflows starting Monday.\n"
-        "Output: A new workflow optimization policy begins Monday for all teams.\n\n"
+        "Output: A new workflow optimization system goes live Monday for all teams.\n\n"
         "Text:\n{text}"
     ),
 
     "casual": (
-        "[INSTRUCTION] Make it sound relaxed and easy, like talking to a friend. "
-        "Use simple words and short sentences (Flesch 70–85). "
-        "Keep it friendly and clear, but don’t overdo slang.\n\n"
+        "[INSTRUCTION] Rewrite the text in a relaxed, natural, easygoing tone—like chatting with a friend. "
+        "Use simple wording, smooth phrasing, and short sentences (10–15 words). "
+        "Avoid slang, jokes, or exaggeration; keep meaning fully intact. "
+        "Target Flesch Reading Ease 72–85, Grade Level 6–8.\n\n"
+        "Keep emojis, placeholders, and URLs untouched.\n\n"
         "Example:\n"
         "Input: The organization will launch a workflow improvement plan next week.\n"
-        "Output: Hey, just letting you know — the company’s rolling out a new way to work next week.\n\n"
+        "Output: Just a heads-up — the company’s rolling out a new way to work next week.\n\n"
         "Text:\n{text}"
     ),
 
     "empathetic": (
-        "[INSTRUCTION] Rewrite with empathy and warmth. "
-        "Use gentle, caring language that’s easy to read (Flesch 65–80). "
-        "Show understanding while keeping the facts accurate.\n\n"
+        "[INSTRUCTION] Rewrite the text with a warm, supportive, and understanding tone while keeping all facts accurate. "
+        "Use gentle, reassuring language and short-to-medium sentences (12–18 words). "
+        "Acknowledge the emotional weight subtly without adding new emotions not present in the original content. "
+        "Target Flesch Reading Ease 65–80, Grade Level 7–9.\n\n"
+        "Do not change URLs, placeholders, or factual content.\n\n"
         "Example:\n"
         "Input: The workflow optimization process will begin on Monday.\n"
-        "Output: We know changes can be a lot, but the new process starts Monday — and we’ll support you all the way.\n\n"
+        "Output: I know changes can feel overwhelming, but the new process starts Monday, and we’ll handle it together.\n\n"
         "Text:\n{text}"
     ),
 }
@@ -150,7 +160,8 @@ class PromptService:
 
         response_format_constraint = (
             "\n\n--- RESPONSE FORMAT ---\n"
-            "Respond ONLY with the rewritten text, no explanations or meta-comments."
+            "Respond ONLY with the rewritten text, no explanations or meta-comments. and no aesterisks or quotes."
+            "Fix grammar as part of rewriting."
         )
 
         return base_prompt + dynamic_instruction + response_format_constraint
