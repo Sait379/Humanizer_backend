@@ -29,6 +29,7 @@ class PiiService:
             "AADHAAR": re.compile(r"(?<!\d)(?:\d{4}\s?\d{4}\s?\d{4})(?!\d)"),
             "IFSC": re.compile(r"\b[A-Z]{4}0[A-Z0-9]{6}\b"),
             "IPV4": re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"),
+            "YEAR": re.compile(r"\b(19|20)\d{2}\b"), 
         }
         self._ner_labels = {"PERSON": "NAME", "GPE": "GPE", "LOC": "LOC", "ORG": "ORG"}
 
@@ -95,12 +96,12 @@ class PiiService:
             restored = restored.replace(placeholder, original)
         return restored
 
-# Example usage
+# # Example usage
 # if __name__ == "__main__":
 #     service = PiiService()
 #     text = "Ayushi Gupta lives in Delhi. Email: ayushi@example.com, PHONE: +91-9876543210, PAN: ABCDE1234F."
 #     masked, mapping = service.mask_pii(text)
 #     print("Masked:\n", masked)
 #     print("\nMapping:\n", mapping)
-#     # restored = service.restore_pii(masked, mapping)
-#     # print("\nRestored:\n", restored)
+#     restored = service.restore_pii(masked, mapping)
+#     print("\nRestored:\n", restored)
