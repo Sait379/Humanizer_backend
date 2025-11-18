@@ -91,7 +91,7 @@ class PromptService:
         # Output constraint
         return (
             prompt + self.placeholder_rule + 
-            "\n\n[OUTPUT]\nReturn ONLY the rewritten text. Do not explain anything. And keep the Placeholders unchanged. and don"
+            "\n\n[OUTPUT]\nReturn ONLY the rewritten text. Do not explain anything. And keep the Placeholders unchanged. And keep elements as it is, for example bullet points or any other HTML tag"
         )
 
     
