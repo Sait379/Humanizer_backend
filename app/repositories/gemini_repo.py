@@ -21,25 +21,36 @@ class GeminiRepo:
         self.client = genai.Client(api_key=api_key)
         self.model_name = settings.MODEL_NAME or "gemini-2.5-flash"
 
-    def get_config_for_tone(self, tone: str) -> GenerateContentConfig:
-        """
-        Returns tone-aware configuration for generation settings.
-        """
+    def get_config_for_tone(self, tone: str, input_text: str = "") -> GenerateContentConfig:
         tone = tone.lower().strip()
+
+        # Human-texture-aware sampling
         tone_configs = {
-        "friendly":   {"temperature": 0.7, "top_p": 0.95, "top_k": 40},
-        "neutral":    {"temperature": 0.4, "top_p": 0.9,  "top_k": 30},
-        "formal":     {"temperature": 0.3, "top_p": 0.85, "top_k": 20},
-        "empathetic": {"temperature": 0.65,"top_p": 0.9,  "top_k": 40},
-        "professional":{"temperature":0.35,"top_p": 0.85, "top_k": 25},
-        "casual":     {"temperature": 0.8, "top_p": 0.95, "top_k": 50},
+            "friendly":     {"temperature": 0.82, "top_p": 0.96, "top_k": 40},
+            "casual":       {"temperature": 0.88, "top_p": 0.97, "top_k": 55},
+            "empathetic":   {"temperature": 0.78, "top_p": 0.94, "top_k": 40},
+            "neutral":      {"temperature": 0.55, "top_p": 0.90, "top_k": 32},
+            "professional": {"temperature": 0.48, "top_p": 0.87, "top_k": 28},
+            "formal":       {"temperature": 0.42, "top_p": 0.84, "top_k": 20},
         }
 
+
         cfg = tone_configs.get(tone, tone_configs["neutral"])
+
+        # Slight dynamic adjustment by text length
+        words = len(input_text.split())
+
+        if words < 20:
+            cfg["top_k"] += 8
+        elif words > 150:
+            cfg["top_k"] -= 5
+
+        cfg["top_k"] = max(10, min(cfg["top_k"], 75))
+
         return GenerateContentConfig(
             temperature=cfg["temperature"],
+            top_p=cfg["top_p"],
             top_k=cfg["top_k"],
-            top_p=cfg["top_p"]
         )
 
     def run_gemini(self, prompt: str, tone: str) -> str:
@@ -54,7 +65,8 @@ class GeminiRepo:
             str: The best rewritten output text from Gemini.
         """
         try:
-            config = self.get_config_for_tone(tone)
+            
+            config = self.get_config_for_tone(tone, input_text=prompt)
             contents = [Content(role="user", parts=[Part(text=prompt)])]
 
             response = self.client.models.generate_content(

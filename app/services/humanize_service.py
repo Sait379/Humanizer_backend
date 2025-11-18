@@ -46,6 +46,7 @@ class HumanizeService:
             if enable_pii:
                 try:
                     masked_for_prompt, pii_map = self.pii_service.mask_pii(base_clean, strategy=pii_strategy)
+                    print(f"PII MAp: {pii_map}")
                     logger.debug(f"[PII] Masked {len(pii_map)} items with strategy={pii_strategy}.")
                 except Exception as pii_err:
                     logger.warning(f"[PII] Masking skipped due to error: {pii_err}")
