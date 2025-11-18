@@ -25,12 +25,12 @@ class HumanizeService:
         self.prompt_service = PromptService()
         self.gemini_repo = GeminiRepo()
         self.scoring_service = ScoringService()
-        self.pii_service = PiiService()              # ✅ new
+        # self.pii_service = PiiService()              # ✅ new
         
 
     async def run_pipeline(self, text: str, tone: str = "neutral",
-                           enable_pii: bool = True,
-                           pii_strategy: str = "hash",   # "hash" | "placeholder" | "redact"
+                        #    enable_pii: bool = True,
+                        #    pii_strategy: str = "hash",   # "hash" | "placeholder" | "redact"
                            ) -> HumanizeResponse:
         start_time = time.perf_counter()  # Start timing the full pipeline
         try:
@@ -42,14 +42,14 @@ class HumanizeService:
 
             # 🧩 STEP 2: PII Masking (Optional / Future Feature)
             masked_for_prompt = base_clean
-            pii_map = {}
-            if enable_pii:
-                try:
-                    masked_for_prompt, pii_map = self.pii_service.mask_pii(base_clean, strategy=pii_strategy)
-                    print(f"PII MAp: {pii_map}")
-                    logger.debug(f"[PII] Masked {len(pii_map)} items with strategy={pii_strategy}.")
-                except Exception as pii_err:
-                    logger.warning(f"[PII] Masking skipped due to error: {pii_err}")
+            # pii_map = {}
+            # if enable_pii:
+            #     try:
+            #         masked_for_prompt, pii_map = self.pii_service.mask_pii(base_clean, strategy=pii_strategy)
+            #         print(f"PII MAp: {pii_map}")
+            #         logger.debug(f"[PII] Masked {len(pii_map)} items with strategy={pii_strategy}.")
+            #     except Exception as pii_err:
+            #         logger.warning(f"[PII] Masking skipped due to error: {pii_err}")
 
             # 🧠 STEP 3: Prompt Construction
             final_prompt = self.prompt_service.build_dynamic_prompt(
@@ -62,12 +62,12 @@ class HumanizeService:
 
             # 🔁 STEP 5A: Restore PII first (NEW)
             post_llm = best_output
-            if enable_pii and pii_map:
-                try:
-                    post_llm = self.pii_service.restore_pii(best_output, pii_map)
-                    logger.debug("[PII] Restoration complete.")
-                except Exception as restore_err:
-                    logger.warning(f"[PII] Restoration failed, returning LLM text as-is: {restore_err}")
+            # if enable_pii and pii_map:
+            #     try:
+            #         post_llm = self.pii_service.restore_pii(best_output, pii_map)
+            #         logger.debug("[PII] Restoration complete.")
+            #     except Exception as restore_err:
+            #         logger.warning(f"[PII] Restoration failed, returning LLM text as-is: {restore_err}")
 
             # 🪄 STEP 5B: Normalize/restore any non-PII masks your NormalizeService uses
             # (If your NormalizeService.restore expects 'mask_map' (e.g., emojis), keep it.)

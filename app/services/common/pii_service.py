@@ -120,12 +120,12 @@ class PiiService:
         return restored
 
 
-# Example usage
-if __name__ == "__main__":
-    service = PiiService()
-    text = " Norse mythology is the body of myths from the North Germanic peoples, particularly the Scandinavians during the Viking Age, that was based on Old Norse religion and passed down through oral tradition and later in medieval texts. It features a complex cosmology with nine worlds supported by the world tree Yggdrasil, and a pantheon of gods and goddesses from tribes like the Aesir and Vanir, with prominent figures including Odin, Thor, and Loki."
-    masked, mapping = service.mask_pii(text)
-    print("Masked:\n", masked)
-    print("\nMapping:\n", mapping)
-    restored = service.restore_pii(masked, mapping)
-    print("\nRestored:\n", restored)
+# # Example usage
+# if __name__ == "__main__":
+#     service = PiiService()
+#     text = " Norse mythology is the body of myths from the North Germanic peoples, particularly the Scandinavians during the Viking Age, that was based on Old Norse religion and passed down through oral tradition and later in medieval texts. It features a complex cosmology with nine worlds supported by the world tree Yggdrasil, and a pantheon of gods and goddesses from tribes like the Aesir and Vanir, with prominent figures including Odin, Thor, and Loki."
+#     masked, mapping = service.mask_pii(text)
+#     print("Masked:\n", masked)
+#     print("\nMapping:\n", mapping)
+#     restored = service.restore_pii(masked, mapping)
+#     print("\nRestored:\n", restored)
