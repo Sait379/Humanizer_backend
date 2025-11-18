@@ -16,9 +16,9 @@ class NormalizeService:
         """Remove HTML, digits, extra spaces; keep links and emojis."""
         text = html.unescape(re.sub(r'<.*?>', '', text))
         text = unicodedata.normalize("NFKC", text)
-        text = re.sub(r'\d+', '', text)
+        # text = re.sub(r'\d+', '', text)
         text = re.sub(r'([!?.,])\1+', r'\1', text)
-        text = re.sub(r'[\r\n\t]+', ' ', text)
+        # text = re.sub(r'[\r\n\t]+', ' ', text)
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
