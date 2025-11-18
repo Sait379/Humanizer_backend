@@ -8,9 +8,11 @@ app = FastAPI(title=settings.PROJECT_NAME)
 
 # ✅ --- CORS CONFIGURATION ---
 origins = [
-    "http://localhost:5173",   # Vite dev server
-    "http://localhost:3000",   # React dev server (CRA)
-    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://localhost:5173",# Vite dev server
+    "http://localhost:3000", 
+    "http://127.0.0.1:5173",# React dev server (CRA)
+    "http://127.0.0.1:5174",
     "http://127.0.0.1:3000",
 ]
 
