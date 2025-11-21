@@ -3,7 +3,6 @@ httpx[http2]
 uvicorn
 python-dotenv
 langchain
-langchain-google-genai
 google-genai
 pydantic
 langchain-core 
@@ -16,3 +15,4 @@ cleantext
 contractions
 spacy
 en_core_web_sm
+google-cloud-aiplatform
