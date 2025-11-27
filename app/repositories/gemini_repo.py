@@ -1,86 +1,152 @@
-import os
-from google import genai
-from google.genai.types import Content, Part, GenerateContentConfig
-from app.core.config import settings  # Ensure this holds MODEL_NAME and GEMINI_API_KEY
+import logging
+import time
+from typing import Optional
+
+import vertexai
+from vertexai import generative_models
+from vertexai.generative_models import GenerationConfig as VertexGenerationConfig
+
+from app.core.config import settings  # must define GCP_PROJECT_ID, GCP_LOCATION, MODEL_NAME
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiRepo:
     """
-    Repository for interacting with the Gemini API using the official Google GenAI SDK.
-    
-    This class now requests **a single best output** from Gemini, relying on the model's
-    built-in quality ranking instead of fetching multiple candidates.
+    Vertex AI–native repository for Gemini models.
+
+    - Uses vertexai.init() (service account / ADC auth)
+    - Uses GenerativeModel for text-only endpoints
+    - Enforces model safety
+    - Adds retries + backoff
+    - Returns best text output
     """
 
+    ALLOWED_MODELS = {
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-001",
+        "gemini-1.5-flash",
+    }
+
+    DISALLOWED_SUBSTRINGS = [
+        "image", "imagen", "video", "vision", "audio", "speech",
+        "embed", "multimodal", "agent", "tuning",
+    ]
+
     def __init__(self):
-        """Initializes the repository and Gemini client."""
-        api_key = settings.GEMINI_API_KEY
-        if not api_key:
-            raise ValueError("❌ GEMINI_API_KEY not found in environment variables.")
-        
-        self.client = genai.Client(api_key=api_key)
-        self.model_name = settings.MODEL_NAME or "gemini-2.5-flash"
+        project = getattr(settings, "GCP_PROJECT_ID", None)
+        location = getattr(settings, "GCP_LOCATION", "us-central1")
 
-    def get_config_for_tone(self, tone: str, input_text: str = "") -> GenerateContentConfig:
-        tone = tone.lower().strip()
+        if not project:
+            raise ValueError("GCP_PROJECT_ID is required for Vertex AI.")
 
-        # Human-texture-aware sampling
+        vertexai.init(project=project, location=location)
+
+        configured_model = getattr(settings, "MODEL_NAME", "gemini-2.5-flash")
+        external_safe_models = getattr(settings, "SAFE_VERTEX_MODELS", None)
+
+        if external_safe_models and isinstance(external_safe_models, (list, set, tuple)):
+            self.SAFE_MODELS = set(external_safe_models)
+        else:
+            self.SAFE_MODELS = set(self.ALLOWED_MODELS)
+
+        self.model_name = self._validate_model_name(configured_model)
+        self.model = generative_models.GenerativeModel(self.model_name)
+
+        self.max_retries = 3
+        self.base_backoff = 0.7
+
+    def _validate_model_name(self, model_name: str) -> str:
+        name = (model_name or "").strip()
+        if not name:
+            logger.warning("Empty MODEL_NAME. Using gemini-2.5-flash.")
+            return "gemini-2.5-flash"
+
+        lowered = name.lower()
+        for bad in self.DISALLOWED_SUBSTRINGS:
+            if bad in lowered:
+                raise ValueError(f"Model '{name}' is blocked (contains '{bad}').")
+
+        if name not in self.SAFE_MODELS:
+            logger.warning(f"MODEL_NAME '{name}' not in SAFE_MODELS={self.SAFE_MODELS}. Using gemini-2.5-flash.")
+            return "gemini-2.5-flash"
+
+        return name
+
+    def get_config_for_tone(self, tone: Optional[str] = None) -> VertexGenerationConfig:
+        t = (tone or "neutral").lower().strip()
+
         tone_configs = {
-            "friendly":     {"temperature": 0.82, "top_p": 0.96, "top_k": 40},
-            "casual":       {"temperature": 0.88, "top_p": 0.97, "top_k": 55},
-            "empathetic":   {"temperature": 0.78, "top_p": 0.94, "top_k": 40},
-            "neutral":      {"temperature": 0.55, "top_p": 0.90, "top_k": 32},
-            "professional": {"temperature": 0.48, "top_p": 0.87, "top_k": 28},
-            "formal":       {"temperature": 0.42, "top_p": 0.84, "top_k": 20},
+            "friendly":     {"temperature": 0.82, "top_p": 0.96, "top_k": 32},
+            "casual":       {"temperature": 0.9,  "top_p": 0.98, "top_k": 40},
+            "empathetic":   {"temperature": 0.8,  "top_p": 0.95, "top_k": 32},
+            "professional": {"temperature": 0.65, "top_p": 0.90, "top_k": 24},
+            "formal":       {"temperature": 0.55, "top_p": 0.85, "top_k": 24},
+            "neutral":      {"temperature": 0.70, "top_p": 0.92, "top_k": 24},
         }
 
+        cfg = tone_configs.get(t, tone_configs["neutral"])
 
-        cfg = tone_configs.get(tone, tone_configs["neutral"])
-
-        # Slight dynamic adjustment by text length
-        words = len(input_text.split())
-
-        if words < 20:
-            cfg["top_k"] += 8
-        elif words > 150:
-            cfg["top_k"] -= 5
-
-        cfg["top_k"] = max(10, min(cfg["top_k"], 75))
-
-        return GenerateContentConfig(
+        return VertexGenerationConfig(
             temperature=cfg["temperature"],
             top_p=cfg["top_p"],
             top_k=cfg["top_k"],
         )
 
-    def run_gemini(self, prompt: str, tone: str) -> str:
-        """
-        Sends a single prompt to the Gemini API and returns the best rewritten text.
-        
-        Args:
-            prompt (str): The text prompt or instruction to humanize.
-            tone (str): Desired tone ("friendly", "neutral", "formal", etc.)
-            
-        Returns:
-            str: The best rewritten output text from Gemini.
-        """
-        try:
-            
-            config = self.get_config_for_tone(tone, input_text=prompt)
-            contents = [Content(role="user", parts=[Part(text=prompt)])]
+    def run_gemini(self, prompt: str, tone: Optional[str] = None) -> str:
+        gen_config = self.get_config_for_tone(tone)
 
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=contents,
-                config=config,
-            )
+        last_err = None
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                logger.debug(f"[VERTEX] Calling model={self.model_name}, attempt={attempt}")
 
-            # Gemini already returns the top-ranked response by default.
-            # Safely extract its text.
-            if not response or not getattr(response, "text", None):
-                return "⚠️ Gemini returned no text output."
+                response = self.model.generate_content(
+                    prompt,
+                    generation_config=gen_config,
+                )
 
-            return response.text.strip()
+                usage = getattr(response, "usage_metadata", None)
+                if usage:
+                    logger.info(f"[TOKENS] usage_metadata={usage}")
 
-        except Exception as e:
-            return f"❌ Error while calling Gemini API: {str(e)}"
+                text = self._extract_text(response)
+                if not text:
+                    raise RuntimeError("Empty text returned from Vertex AI.")
+
+                if len(text) > 20000:
+                    logger.warning(f"[VERTEX] Truncating output from {len(text)} to 20000 chars.")
+                    text = text[:20000]
+
+                return text
+
+            except Exception as e:
+                last_err = e
+                msg = str(e).lower()
+
+                if any(x in msg for x in ["invalid_argument", "permission_denied", "not_found"]):
+                    logger.error(f"[VERTEX] Non-retryable error: {e}")
+                    raise
+
+                if attempt == self.max_retries:
+                    logger.exception(f"[VERTEX] Failed after {attempt} attempts: {e}")
+                    break
+
+                backoff = self.base_backoff * attempt
+                logger.warning(f"[VERTEX] Transient error: {e}. Retrying in {backoff:.2f}s...")
+                time.sleep(backoff)
+
+        raise RuntimeError(f"Vertex call failed after {self.max_retries} attempts: {last_err}")
+
+    @staticmethod
+    def _extract_text(response) -> str:
+        if not response or not getattr(response, "candidates", None):
+            return ""
+
+        first = response.candidates[0]
+        parts = []
+        for part in getattr(first, "content", {}).parts:
+            if hasattr(part, "text") and part.text:
+                parts.append(part.text)
+
+        return "".join(parts).strip()

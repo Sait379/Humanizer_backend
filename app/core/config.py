@@ -10,5 +10,7 @@ class Settings(BaseModel):
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     MODEL_NAME: str = os.getenv("MODEL_NAME", "gemini-2.5-flash")
     HUMANIZER_NAME: str = os.getenv("HUMANIZER_NAME", "text_humanizer")
+    GCP_PROJECT_ID : str = os.getenv("GCP_PROJECT_ID", "")
+    GCP_LOCATION : str = os.getenv("GCP_LOCATION", "us-central1")
 
 settings = Settings()

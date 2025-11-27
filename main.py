@@ -1,6 +1,8 @@
 # app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware  # ✅ Import CORS middleware
+
+from app.api.v1.detector_router import router as detector_router
 from app.api.v1.humanize_route import router as humanize_router
 from app.core.config import settings
 
@@ -31,3 +33,5 @@ app.include_router(humanize_router, prefix="/api/v1")
 @app.get("/")
 def root():
     return {"message": f"{settings.HUMANIZER_NAME} API is running!"}
+
+app.include_router(detector_router)
