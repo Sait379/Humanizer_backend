@@ -3,8 +3,9 @@ import time
 from typing import Optional
 
 import vertexai
-from vertexai import generative_models
+from vertexai import generative_models, _genai_types
 from vertexai.generative_models import GenerationConfig as VertexGenerationConfig
+from vertexai.generative_models import SafetySetting, HarmCategory, HarmBlockThreshold
 
 from app.core.config import settings  # must define GCP_PROJECT_ID, GCP_LOCATION, MODEL_NAME
 
@@ -35,7 +36,7 @@ class GeminiRepo:
 
     def __init__(self):
         project = getattr(settings, "GCP_PROJECT_ID", None)
-        location = getattr(settings, "GCP_LOCATION", "us-central1")
+        location = getattr(settings, "GCP_LOCATION", "asia-south1")
 
         if not project:
             raise ValueError("GCP_PROJECT_ID is required for Vertex AI.")
@@ -54,7 +55,7 @@ class GeminiRepo:
         self.model = generative_models.GenerativeModel(self.model_name)
 
         self.max_retries = 3
-        self.base_backoff = 0.7
+        self.base_backoff = 0.3
 
     def _validate_model_name(self, model_name: str) -> str:
         name = (model_name or "").strip()
@@ -91,6 +92,7 @@ class GeminiRepo:
             temperature=cfg["temperature"],
             top_p=cfg["top_p"],
             top_k=cfg["top_k"],
+            response_modalities=["TEXT"]
         )
 
     def run_gemini(self, prompt: str, tone: Optional[str] = None) -> str:
@@ -104,7 +106,26 @@ class GeminiRepo:
                 response = self.model.generate_content(
                     prompt,
                     generation_config=gen_config,
+                    safety_settings=[
+                        SafetySetting(
+                            category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                            threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
+                        ),
+                        SafetySetting(
+                            category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                            threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
+                        ),
+                        SafetySetting(
+                            category=HarmCategory.HARM_CATEGORY_HARASSMENT,
+                            threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
+                        ),
+                        SafetySetting(
+                            category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                            threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
+                        )
+                    ]
                 )
+
 
                 usage = getattr(response, "usage_metadata", None)
                 if usage:
