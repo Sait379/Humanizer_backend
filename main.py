@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware  # ✅ Import CORS middleware
 
 from app.api.v1.detector_router import router as detector_router
 from app.api.v1.humanize_route import router as humanize_router
+from app.api.v1.paraphrase_route import router as paraphrase_router
 from app.core.config import settings
 
 app = FastAPI(title=settings.PROJECT_NAME)
@@ -29,6 +30,7 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(humanize_router, prefix="/api/v1")
+app.include_router(paraphrase_router, prefix="/api/v1")
 
 @app.get("/")
 def root():
