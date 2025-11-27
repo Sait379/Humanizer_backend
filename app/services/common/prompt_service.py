@@ -167,3 +167,14 @@ Return every placeholder unchanged.
         )
 
         return base + burstiness_block + "\n" + readability_block
+    
+    @staticmethod
+    def paraphrase_prompt(text: str) -> str:
+        return (
+            "Paraphrase the given text.\n"
+            "Do NOT change its meaning.\n"
+            "Do NOT expand or explain anything.\n"
+            "Return a single rewritten version only.\n"
+            "Output only the paraphrased sentence.\n\n"
+            f"{text}"
+        )
