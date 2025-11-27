@@ -6,8 +6,8 @@ from app.services.common.scoring_service import ScoringService
 
 class PromptService:
     """
-    Builds dynamic, highly-constrained, and tone-aware prompts optimized
-    for Gemini on Vertex AI. Designed for text humanization.
+    Builds dynamic, tone-safe, and humanization-optimized prompts
+    for use with Gemini on Vertex AI.
     """
 
     IDEAL_RANGES = {
@@ -19,37 +19,64 @@ class PromptService:
         "empathetic": {"flesch": (65, 80), "coleman": (9, 12)},
     }
 
-    DEMO_INPUT = (
-        "The company has informed its personnel that a new directive related to workflow "
-        "optimization will commence on Monday."
-    )
-
+    # Placeholder preservation (keep as-is)
     placeholder_rule = """[PLACEHOLDER RULE]
-Keep ALL bracketed placeholders exactly as they are.
-Do NOT change their text, characters, digits, SALT suffixes (like _KX), spacing, order, or position.
-Return every placeholder (e.g., [[HASH:xxxx]], ###[[HASH:xxxx]]###, [URL_1_KX], [EMOJI_1_KX]) unchanged.
-Never add or remove brackets around existing placeholders.
-Never replace placeholders with descriptions or natural language.
+Keep ALL bracketed placeholders exactly as they appear.
+Do NOT modify text, characters, spacing, SALT suffixes, or order.
+Do NOT replace placeholders with explanations or descriptions.
+Return every placeholder unchanged.
 """
 
+    # -------------------
+    # UPDATED TONE MAP
+    # -------------------
+    TONE_MAP = {
+        "neutral": (
+            "Clear, balanced, human-like writing. Maintain any existing professionalism. "
+            "No conversational fillers."
+        ),
+        "friendly": (
+            "Warm and approachable with light, natural human flow. Subtle connectors allowed."
+        ),
+        "formal": (
+            "Refined, structured, human expression without any conversational fillers."
+        ),
+        "professional": (
+            "Concise, confident, steady, and naturally varied — no fillers or overly casual markers."
+        ),
+        "casual": (
+            "Relaxed and conversational. Light connectors allowed, but avoid slang."
+        ),
+        "empathetic": (
+            "Supportive, understanding, and emotionally steady. Light softening connectors allowed."
+        ),
+    }
+
+    ALLOWED_TONES = set(TONE_MAP.keys())
+
+    # -------------------
+    # MAIN HUMANIZATION PROMPT TEMPLATE
+    # -------------------
     PROMPTS = {
         "{TONE}": (
-            "[INSTRUCTION]\n"
-            "Rewrite the text so it feels written by a real human — not an AI. "
-            "Maintain meaning exactly, but increase natural variation: shift sentence lengths, "
-            "use slightly irregular rhythm, allow micro-pauses (like 'well,' 'also,' 'honestly,'), "
-            "and incorporate subtle hedges ('a bit', 'kind of'). Increase lexical unpredictability "
-            "without changing facts. Avoid robotic symmetry.\n\n"
+            "[HUMANIZATION INSTRUCTION]\n"
+            "Rewrite the text so it feels genuinely written by a human, not an AI. Preserve meaning with "
+            "absolute precision — no altering facts, intent, or level of formality. Remove AI-like symmetry "
+            "or mechanical tone. Increase natural human variation: irregular rhythm, subtle pacing shifts, "
+            "mixed sentence lengths, and mild lexical variety.\n\n"
 
-            "[HUMAN BURSTINESS]\n"
-            "Use a mix of short and long sentences. Alternate pacing. Use natural breaks, "
-            "clause-level variation, and occasional informal connectors that humans use when "
-            "thinking while writing. Avoid perfect grammar uniformity. Keep the flow organic.\n\n"
+            "[HUMAN CADENCE]\n"
+            "Use natural pacing through varied sentence lengths and gentle rhythm changes. Do NOT introduce "
+            "conversational fillers such as 'well,' 'honestly,' 'to be fair,' or similar phrases in formal, "
+            "professional, or neutral contexts. Maintain organic flow without robotic balance.\n\n"
 
-            "[STYLE SAFETY]\n"
-            "No spelling errors. No grammar mistakes that change meaning. Never alter numbers, years, "
-            "dates, ages, IDs, amounts, or placeholders. Preserve ALL formatting: new lines, *, markdown, "
-            "bullets, URLs, and emojis.\n\n"
+            "[FORMALITY CHECK]\n"
+            "If the text appears formal, academic, or professional in nature, preserve that style fully "
+            "and avoid any informal markers regardless of the selected tone.\n\n"
+
+            "[SAFETY & PRESERVATION]\n"
+            "Do not change numbers, dates, IDs, URLs, bullet structure, markdown, or emojis. Keep ALL formatting "
+            "unchanged: spacing, new lines, lists, symbols. No added commentary or explanations.\n\n"
 
             "{PLACEHOLDER_RULE}\n\n"
 
@@ -60,60 +87,43 @@ Never replace placeholders with descriptions or natural language.
             "{text}\n\n"
 
             "[OUTPUT CONSTRAINT]\n"
-            "Return ONLY the rewritten text, with the same placeholders and numeric values preserved. "
-            "Do not add explanations, headers, extra commentary, or metadata.\n"
+            "Return ONLY the rewritten text with identical formatting and placeholders."
         )
     }
 
-    TONE_MAP = {
-        "neutral": "Use clear, simple language with light human variation.",
-        "friendly": "Use warm flow, soft edges, light positivity, natural contractions.",
-        "formal": "Keep it refined but human, with slightly complex structure.",
-        "professional": "Confident, concise, but still human and slightly varied.",
-        "casual": "Relaxed, chatty feel; small pauses and informal flow.",
-        "empathetic": "Soft, understanding, supportive tone with emotional steadiness.",
-    }
-
-    # ✅ allowed tones = actual tones we support
-    ALLOWED_TONES = set(TONE_MAP.keys())
-
     def __init__(self, tone: Optional[str] = None):
-        """Initializes the service with a tone, defaulting to 'neutral'."""
         self.tone = tone.lower().strip() if tone else "neutral"
         if self.tone not in self.ALLOWED_TONES:
             print(f"Warning: Tone '{self.tone}' not supported. Defaulting to 'neutral'.")
             self.tone = "neutral"
 
+    # -------------------
+    # BASE PROMPT BUILDER
+    # -------------------
     def build_prompt(self, text, tone: Optional[str] = None) -> str:
-        """
-        Build a base prompt using the selected tone and core instructions.
-        """
         if isinstance(text, list):
             text = " ".join(map(str, text))
 
-        tx = (tone or self.tone) or "neutral"
-        tx = tx.lower().strip()
-        if tx not in self.ALLOWED_TONES:
-            tx = "neutral"
+        t = (tone or self.tone).lower().strip()
+        if t not in self.ALLOWED_TONES:
+            t = "neutral"
 
-        tone_specific = self.TONE_MAP.get(tx, self.TONE_MAP["neutral"])
+        tone_specific = self.TONE_MAP.get(t, self.TONE_MAP["neutral"])
 
         base_template = self.PROMPTS["{TONE}"]
         prompt = (
             base_template
             .replace("{TONE_SPECIFIC}", tone_specific)
-            .replace("{TONE}", tx)
+            .replace("{TONE}", t)
             .replace("{PLACEHOLDER_RULE}", self.placeholder_rule)
             .format(text=str(text).strip())
         )
-
         return prompt
 
+    # -------------------
+    # DYNAMIC PROMPT BUILDER (Burstiness + Readability)
+    # -------------------
     def build_dynamic_prompt(self, text: str, tone: str) -> str:
-        """
-        Builds a prompt augmented with readability/burstiness guidance derived
-        from ScoringService metrics for the input text.
-        """
         scoring_service = ScoringService()
         metrics = scoring_service.evaluate_preprocessed_text(text)
 
@@ -124,32 +134,35 @@ Never replace placeholders with descriptions or natural language.
         ideal = self.IDEAL_RANGES[t]
         adjustments = []
 
-        # If too simple → add structure (increase complexity/burstiness)
+        # Too simple → increase richness
         if metrics["flesch_reading_ease"] > ideal["flesch"][1]:
-            adjustments.append("Add richer phrasing and occasional longer sentences.")
+            adjustments.append("Introduce slightly richer phrasing and some longer sentences.")
 
-        # If too complex → simplify
+        # Too complex → simplify
         if metrics["coleman_liau_index"] > ideal["coleman"][1]:
-            adjustments.append("Use simpler words and break long clauses.")
+            adjustments.append("Simplify word choice and split long clauses if needed.")
 
-        # If too flat → increase burstiness
+        # Too flat → boost lexical diversity
         if metrics["lexical_diversity"] < 0.35:
-            adjustments.append("Increase lexical variety slightly.")
+            adjustments.append("Increase lexical variety in a subtle, human way.")
 
-        guidance = " ".join(adjustments) if adjustments else "Maintain balanced human-like variation."
+        guidance = (
+            " ".join(adjustments)
+            if adjustments
+            else "Maintain balanced, natural human-like variation."
+        )
 
         base = self.build_prompt(text, t)
 
         burstiness_block = (
             "\n[BURSTINESS BOOST]\n"
-            "Introduce natural variation — mix of short and long sentences, unexpected but meaningful "
-            "clause boundaries, human-like pacing shifts, and light cognitive markers like 'well,' "
-            "'also,' or 'honestly,'. Avoid robotic parallelism.\n"
+            "Use natural irregularity: occasional reflective longer sentences mixed with shorter lines. "
+            "Keep rhythm human but not chaotic. No conversational fillers in formal or professional content.\n"
         )
 
         readability_block = (
-            f"[READABILITY TARGET]\n{guidance} "
-            f"(Flesch target: {ideal['flesch'][0]}–{ideal['flesch'][1]}, "
+            f"[READABILITY TARGET]\n"
+            f"{guidance} (Flesch: {ideal['flesch'][0]}–{ideal['flesch'][1]}, "
             f"Coleman-Liau: {ideal['coleman'][0]}–{ideal['coleman'][1]}.)"
         )
 
