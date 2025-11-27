@@ -17,7 +17,7 @@ class PromptService:
 
     DEMO_INPUT = "The company has informed its personnel that a new directive related to workflow optimization will commence on Monday."
 
-    placeholder_rule = """[PLACEHOLDER RULE]
+    placeholder_rule = """
     Keep ALL bracketed placeholders exactly as they are. 
     Do NOT change their text, characters, digits, spacing, order, or position.
     Return every placeholder (e.g., [[HASH:xxxx]], [URL_1], [EMOJI_1]) unchanged.
@@ -91,7 +91,7 @@ class PromptService:
         # Output constraint
         return (
             prompt + self.placeholder_rule + 
-            "\n\n[OUTPUT]\nReturn ONLY the rewritten text. Do not explain anything. And keep the Placeholders unchanged."
+            "\n\n[OUTPUT]\nReturn ONLY the rewritten text. Do not explain anything."
         )
 
     
