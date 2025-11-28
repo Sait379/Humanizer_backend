@@ -123,7 +123,7 @@ class PromptService:
         burstiness_block = (
             "\n\n[BURSTINESS BOOST]\n"
             "Introduce natural variation — mix of short and long sentences, unexpected but meaningful clause boundaries, "
-            "human-like pacing shifts, and light cognitive markers like 'well,' 'also,' or 'honestly,'. "
+            "human-like pacing shifts, and light cognitive markers like 'well,' 'also,' or 'honestly'. "
             "Avoid robotic parallelism.\n"
         )
 
