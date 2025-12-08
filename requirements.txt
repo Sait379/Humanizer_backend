@@ -16,3 +16,7 @@ contractions
 spacy
 en_core_web_sm
 google-cloud-aiplatform
+transformers
+torch
+huggingface_hub
+accelerate
